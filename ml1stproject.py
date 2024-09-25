@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, _classification
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -66,8 +66,49 @@ x_test_scaled = scaler.transform(x_test)
 model  = XGBClassifier(
     n_estimators=50,
     learning_rate=0.01,
-
+    max_depth=2,
+    min_child_weight=10,
+    subsample = 0.8,
+    colsample_bytree = 0.8,
+    gamma=2,
+    reg_aplha=1,
+    reg_lambda=1,
+    random_state=42
 )
 
+tscv=TimeSeriesSplit(n_splits=5)
+cv_scores = cross_val_score(model,x_train_scaled, y_train)
+print(f"Cross-validation scores:{cv_scores}")
+print(f"Mean CV score: {cv_scores.mean():.2f}")
 
+model.fit(x_train_scaled, y_train)
 
+y_pred = model.predict(x_test_scaled)
+y_pred_proba = model.predict_proba(x_test_scaled)
+
+accuracy =  accuracy_score(y_test, y_pred)
+log_loss_score = log_loss(y_test, y_pred_proba)
+print(f"Test set accuracy: {accuracy:.2f}")
+print(f"Log test: {log_loss_score:.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+feature_importance = pd.DataFrame({"feature": features,  "importance": model.feature_importances_})
+features_importance = features_importance.sort_values("Importance", ascending=False)
+print("\n Feature Importance:")
+print(features_importance)
+
+plt.figure(figsize=(10,6))
+plt.bar(feature_importance["feature"], feature_importance["importance"])
+plt.title("Features Importance")
+plt.xlabel("Features")
+plt.ylabel("Impoortance") 
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+last_data = X.iloc[-1].values.reshape(1,-1)
+last_data_scaled = scaler.transform(last_data)
+tomorrow_prediction = model.predict(last_data_scaled)
+
+print(f"\n Prediction for tomorrow: {"Up" if tomorrow_predcition}")

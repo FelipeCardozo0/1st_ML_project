@@ -7,7 +7,6 @@ from sklearn.metrics import accuracy_score, _classification
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import TimeSeriesSplit
 
-
 def calculate_rsi (prices, window=14):
     delta = prices.diff()
     gain = (delta.where(delta >0,0)).rolling(window=win)
